@@ -1,6 +1,12 @@
 python-x32
 ==========
 
+This fork is using the library as proxy for X32. Proxy request changes from mixer (ip given from command line) and forwards them to N target-hosts (defined at the code). Each target have regex-filter to limit packets sent. For example using arduino ethernet as button panel, it might be good idea to filter fader values out.
+
+Second reason to use proxy is limit of 4 clients to one mixer. Using button-panels or/and touchOSC ipad-clients (http://hexler.net/software/touchosc), it is easy to have lot more clients.
+
+==========
+
 Python library to interact with Behringer X32 digital mixing desk using OSC-messages (open sound control).
 
 The Behringer X32 has quite good documentation of OSC-messages, but not all messages are documented. Messages that control what 
