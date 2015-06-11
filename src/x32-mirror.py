@@ -1,8 +1,7 @@
 """
 Proxy for 2 Behringer X32 mirror each other
 Modified from https://github.com/tjoracoder/python-x32 by Teppo Rekola, sytem@iki.fi
-test version 0.4, 10.6.2015 
-
+test version 0.5, 11.6.2015 
 
 This software is licensed under the Modified BSD License:
 
@@ -35,8 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import OSC
 import time
 import threading
-import re
-from x32parameters import get_settings # sync:n vaatima lista
+#import re
+from x32parameters import get_settings # list of parameters to sync
 
 
 def request_x32_to_send_change_notifications(clientA, clientB):
@@ -55,14 +54,15 @@ def mixer_thread(server):
 	server.serve_forever()
 
 
-def print_all_x32_change_messages(x32A_address, x32B_address, server_udp_port):
+def parse_x32_change_messages(x32A_address, x32B_address, server_udp_port):
 	
-	# A:n muutokset B:lle ja toiseen suuntaan 				   
+	#get message from A and send it to B 				   
 	def msgFilter_handlerA(addr, tags, data, client_address):
 		txt = 'OSCMessage("%s", %s)' % (addr, data)
 		print "input from A:" + txt
 		clientB.send(OSC.OSCMessage(addr,data))
-		
+	
+	#same as above, another way around	
 	def msgFilter_handlerB(addr, tags, data, client_address):
 		txt = 'OSCMessage("%s", %s)' % (addr, data)
 		print "input from B:" + txt
@@ -73,20 +73,19 @@ def print_all_x32_change_messages(x32A_address, x32B_address, server_udp_port):
 	serverA = OSC.OSCServer(("", server_udp_port))
 	serverA.addMsgHandler("default", msgFilter_handlerA)
 	clientA = OSC.OSCClient(server=serverA) #This makes sure that client and server uses same socket. This has to be this way, as the X32 sends notifications back to same port as the /xremote message came from  
-	clientA.connect((x32A_address, 10023))
-	
-	print "client A olemassa"
+	clientA.connect((x32A_address, 10023))	
+	print "client A created:"
 	print serverA
 	print clientA
 	
-	serverB = OSC.OSCServer(("", server_udp_port+1)) # +1 jotta ei olla samassa portissa
+	serverB = OSC.OSCServer(("", server_udp_port+1)) # +1 to not use same port as A
 	serverB.addMsgHandler("default", msgFilter_handlerB)
-	clientB = OSC.OSCClient(server=serverB) #This makes sure that client and server uses same socket. This has to be this way, as the X32 sends notifications back to same port as the /xremote message came from  
+	clientB = OSC.OSCClient(server=serverB) 
 	clientB.connect((x32B_address, 10023))
-
-	print "client B olemassa"
+	print "client B created:"
 	print serverB
 	print clientB
+	print ""
 	
 		  
 	thread_xremote = threading.Thread(target=request_x32_to_send_change_notifications, kwargs = {"clientA": clientA , "clientB": clientB})
@@ -101,6 +100,7 @@ def print_all_x32_change_messages(x32A_address, x32B_address, server_udp_port):
 	thread_B.daemon=True
 	thread_B.start()  
 	
+	#main loop, wait for full sync
 	while True:
 		print "\n input \"A\" to do full sync from "  + x32A_address + " to " + x32B_address + " and \"B\" to another way \n"
 		print " ctrl+c to stop\n"
@@ -109,7 +109,6 @@ def print_all_x32_change_messages(x32A_address, x32B_address, server_udp_port):
 		if choice == 'A' :
 			print "running sync A to B"
 			
-			# ajetaan sync
 			for setting in settings:
 				print setting
 				clientA.send(OSC.OSCMessage(setting))
@@ -117,7 +116,6 @@ def print_all_x32_change_messages(x32A_address, x32B_address, server_udp_port):
 		elif choice == 'B' : 
 			print "running sync B to A"
 			
-			# ajetaan sync
 			for setting in settings:
 				print setting
 				clientB.send(OSC.OSCMessage(setting))
@@ -129,17 +127,22 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description="Link 2 X32 together")
 	parser.add_argument('--addressA', required = True,						
-						help='name/ip-address of Behringer X32 mixing desk')
+						help='name/ip-address of master X32')
 	parser.add_argument('--addressB', required = True,						
-						help='name/ip-address of second Behringer X32 mixing desk')
+						help='name/ip-address of slave X32')
 	parser.add_argument('--port', default = 10300,						
-						help='UDP-port to open on this machine, also next port')
+						help='UDP-port to open on this machine, will also use next port')
 
 	args = parser.parse_args()
 	
+	print ""
+	print "X32-mirror, links two  X32 desks together"
+	print "Teppo Rekola 2014, based on python X32-library by Sigve Tjora 2013"
+	print "licensed under the Modified BSD License, see source for more information"
+	print ""
 	
-	# generoidaan lista sync:ssa tarvittavista parametreista
+	# generate list of parameters
 	settings = get_settings()
     
-	print_all_x32_change_messages(x32A_address = args.addressA, x32B_address = args.addressB, server_udp_port = args.port)
+	parse_x32_change_messages(x32A_address = args.addressA, x32B_address = args.addressB, server_udp_port = args.port)
 	
