@@ -106,6 +106,15 @@ def oscInputHandler(addr, tags, data, client_address):
 
 
 def request_x32_to_send_change_notifications(client):
+
+	# selvitetään kanavien alkutilat, kunhan kuuntelu on valmis
+	print "odotetaan serveriä"
+	sleep(5)
+	print "kysytään tila:"
+	for index, item in enumerate(channels):
+		client.send(OSC.OSCMessage(item[2]))
+		print "kavana " + index + ": " + item[2]
+
     """request_x32_to_send_change_notifications sends /xremote repeatedly to
     mixing desk to make sure changes are transmitted to our server.
     """
@@ -141,7 +150,6 @@ thread = threading.Thread(target=request_x32_to_send_change_notifications, kwarg
 thread.daemon=True # to get ctrl+c work
 thread.start()
 
-# tähän väliin alkutilan kysely, lähetetään tyhjät osc-käskyt kaikille tunnetuille
 
 
 # start recieving messages from mixer
