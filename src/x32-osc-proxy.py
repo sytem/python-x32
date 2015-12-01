@@ -40,7 +40,7 @@ import re
 # list of targets:
 # host, udp-port, regexp to forward
 # r'foo' notation for raw strings
-targets = ( ( '10.0.0.31', 10024, r'.*' ),  ( 'localhost', 10025, r'foo' ) )
+targets = ( ( 'localhost', 3334, r'.*' ),( 'localhost', 3333, r'.*' ) )
 #targets = ( ( 'localhost', 10024, r'.*' ), ( 'localhost', 10025, r'/ch/02/.*' ), ( 'localhost', 10025, r'foo' ))
 
 
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Forward OSC-messages from X32 to multiple clients, with filter by regular expressions per target. Targets are configured at the begining of this file.")
     parser.add_argument('--address', required = True,                        
                         help='name/ip-address of Behringer X32 mixing desk')
-    parser.add_argument('--port', default = 10300,                        
+    parser.add_argument('--port', default = 10023,                        
                         help='UDP-port to open on this machine.')
 
     args = parser.parse_args()
